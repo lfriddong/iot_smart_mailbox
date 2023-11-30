@@ -30,18 +30,14 @@ def do_connect():
 TCP_SERVER_IP = '192.168.0.248'  # 服务器的IP地址
 TCP_SERVER_PORT = 8080  # 服务器的端口
 
-# 伺服电机角度转换为PWM值的函数
-def servo_duty(angle):
-    return int(650 + (angle * 10 / 9))
-
-# 打开门（将伺服电机设置为垂直状态）
+# 打开门
 def open_door():
-    servo.duty(servo_duty(90))  # 假设90度为垂直位置
+    servo.duty(75)
     print('Door opened')
 
-# 关闭门（将伺服电机设置为水平状态）
+# 关闭门
 def close_door():
-    servo.duty(servo_duty(0))  # 假设0度为水平位置
+    servo.duty(20)
     print('Door closed')
 
 def turn_on_protection():
@@ -70,12 +66,14 @@ def send_tcp_message(message):
         oled.show()
 
         # 根据不同的响应执行不同的操作
-        if response == "PERMIT_DOOROPEN":
+        if response == "permit_sent_to_huzzah":
             open_door()
         elif response == "TURN_ON_PROTECT":
             turn_on_protection()
         elif response == "TURN_OFF_PROTECT":
             turn_off_protection()
+        elif response == "request_sent_to_app":
+            close_door()
 
     except OSError as e:
         print('Error:', e)
