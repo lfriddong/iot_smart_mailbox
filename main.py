@@ -72,7 +72,7 @@ def send_tcp_message(message):
             turn_on_protection()
         elif response == "TURN_OFF_PROTECT":
             turn_off_protection()
-        elif response == "request_sent_to_app":
+        elif response == "request_sent_to_app": and #这只是测试关门
             close_door()
 
     except OSError as e:
