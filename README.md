@@ -1,5 +1,6 @@
 # iot_smart_mailbox
 iot anti-theft smart mailbox project
+
 ESP8266
 ```bash
 esptool.py erase_flash
