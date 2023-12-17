@@ -18,7 +18,7 @@ esptool.py --chip esp32 --port /dev/ttyUSB0 erase_flash
 ```
 
 ```bash
-esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 460800 write_flash -z 0x1000 esp32-20190125-v1.10.bin
+esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 460800 write_flash -z 0x1000 ESP32_GENERIC-20231005-v1.21.0.bin
 ```
 
 ```bash
