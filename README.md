@@ -23,5 +23,5 @@ esptool.py --chip esp32 --port /dev/cu.usbserial-110 write_flash -z 0x1000 ESP32
 ```
 
 ```bash
-
+mpfshell -nc "open tty.usbserial-110; mput main.py"
 ```
