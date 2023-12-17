@@ -14,11 +14,11 @@ mpfshell -nc "open tty.usbserial-028618B4; mput main.py"
 
 ESP32-CAM
 ```bash
-esptool.py --chip esp32 --port /dev/ttyUSB0 erase_flash
+esptool.py --port /dev/cu.usbserial-110 erase_flash
 ```
 
 ```bash
-esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 460800 write_flash -z 0x1000 ESP32_GENERIC-20231005-v1.21.0.bin
+esptool.py --chip esp32 --port /dev/cu.usbserial-110 write_flash -z 0x1000 ESP32_GENERIC-20231005-v1.21.0.bin
 ```
 
 ```bash
