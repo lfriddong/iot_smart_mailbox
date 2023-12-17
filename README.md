@@ -11,6 +11,7 @@ esptool.py --baud 460800 write_flash --flash_size=detect 0 ESP8266_GENERIC-20230
 ```bash
 mpfshell -nc "open tty.usbserial-028618B4; mput main.py"
 ```
+![image](https://github.com/lfriddong/iot_smart_mailbox/assets/145072574/effccf6a-2a99-4b57-8571-e9f679d0bd5c)
 
 
 ESP32-CAM
