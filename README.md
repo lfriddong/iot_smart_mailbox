@@ -21,9 +21,10 @@ esptool.py --port /dev/cu.usbserial-110 erase_flash
 ```bash
 esptool.py --chip esp32 --port /dev/cu.usbserial-110 write_flash -z 0x1000 ESP32_GENERIC-20231005-v1.21.0.bin
 ```
-![image](https://github.com/lfriddong/iot_smart_mailbox/assets/145072574/6447ae05-4a5e-4de2-8d26-49d3e17d53f7)
-
 
 ```bash
 mpfshell -nc "open tty.usbserial-110; mput main.py"
 ```
+
+![image](https://github.com/lfriddong/iot_smart_mailbox/assets/145072574/d76b61ce-f697-4c25-b80d-29c2c4595488)
+
