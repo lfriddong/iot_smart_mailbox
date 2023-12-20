@@ -1,90 +1,102 @@
-#!/usr/bin/env python3
-import socket
+from flask import Flask, request, jsonify
 import threading
-from typing import Tuple
+import time
 
-# Global variables
-app_address: Tuple[str, int] = ('192.168.1.1', 8080)  # app address, NEED TO BE MODIFIED!
-huzzah_address: Tuple[str, int] = ('192.168.1.2', 8080)  # app address, NEED TO BE MODIFIED!
+app = Flask(__name__)
+
+# 初始化服务端状态字段
+status = {
+    "door_open_permit": False,
+    "mannual_protect_on": False,
+    "mannual_protect_off": False,
+    "request_door_open": False,
+    "alarm_on": False,
+    "protect_mode_status":False
+}
+
+# 用于同步状态的锁
+status_lock = threading.Lock()
+
+def check_and_reset_status():
+    with status_lock:
+        # 在这里添加任何需要定期重置的状态字段
+        status["door_open_permit"] = False
+        status["mannual_protect_on"] = False
+        status["mannual_protect_off"] = False
+        status["request_door_open"] = False
+        status["alarm_on"] = False
+
+def get_status():
+    with status_lock:
+        return status.copy()
+
+def set_status(request_data):
+    with status_lock:
+        # 仅更新客户端提供的字段
+        for key in request_data:
+            if key in status:
+                status[key] = request_data[key]
+    print(status)
+
+# -------路由----------------
+@app.route('/get_status', methods=['GET'])
+def get_status_route():
+    return jsonify(get_status())
+
+@app.route('/set_status', methods=['POST'])
+def set_status_route():
+    request_data = request.get_json()
+    set_status(request_data)
+    return jsonify({"success": True})
+
+@app.route('/get_image_url', methods=['GET'])
+def get_image_url():
+    # app轮询url路径
+    # 这个逻辑需要根据你的实际情况实现
+    latest_image_url = "http://35.225.150.6/images/1.jpeg"  # 替换成实际的图片 URL
+    return jsonify({"image_url": latest_image_url})    
+
+@app.route('/upload_photo', methods=['POST'])
+def upload_photo():
+    try:
+        # 接收照片数据
+        photo_data = request.data
+        
+        # 保存照片到文件路径
+        with open('/home/wd2375/pub_pics/1.jpeg', 'wb') as photo_file:
+            photo_file.write(photo_data)
+
+        return jsonify({"success": True, "message": "Photo uploaded successfully"})
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)})
 
 
-# methods definition
-def handle_client(client_socket, client_address):
-    print("Connection from", client_address)
+'''
+额外功能
+@app.route('/perform_action', methods=['POST'])
+def perform_action_route():
+    data = request.get_json()
+    action = data.get('action', None)
+    if action:
+        # 根据 action 执行相应的操作
+        if action == 'get_status':
+            return jsonify(get_status())
+        elif action == 'some_other_action':
+            # 执行其他操作
+            pass
+        else:
+            return jsonify({"error": "Unknown action"})
+    else:
+        return jsonify({"error": "No action specified"})
+'''
+# --------------------------------
 
-    # The server will keep the connection until client closes it
+
+if __name__ == '__main__':
+    # 启动服务端
+    threading.Thread(target=app.run, kwargs={'host': '0.0.0.0', 'port': 5000}).start()
+
+    # 模拟服务端定期清零状态
     while True:
-        data = client_socket.recv(1024)
-        if not data:
-            break  # when client close connection, break the loop,and close connection
-        received_message = data.decode('utf-8')
-        print(f"Received message from {client_address}: {received_message}")
-
-        # analyze msg and handle it
-        # msg from huzzah's connection requesting door open
-        if received_message == "REQUEST_DOOROPEN_HUZZAH":
-
-            # send request to app via a new socket 'app_socket'
-            request_usr_message = "REQUEST_DOOROPEN_SERVER"
-            app_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            app_socket.connect(app_address)
-            app_socket.send(request_usr_message.encode('utf-8'))
-            app_socket.close()
-
-            # send ack to huzzah
-            client_socket.send("request_sent_to_app".encode('utf-8'))
-
-        # msg from app's connection permitting door open
-        elif received_message == "USR_PERMIT_DOOROPEN":
-
-            # send permit to huzzah
-            dooropen_permit_message = "PERMIT_DOOROPEN"
-            huzzah_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            huzzah_socket.connect(huzzah_address)
-            huzzah_socket.send(dooropen_permit_message.encode('utf-8'))
-            huzzah_socket.close()
-
-            # send ack to app
-            client_socket.send("permit_sent_to_huzzah".encode('utf-8'))
-
-        elif received_message == "USR_TURN_ON_PROTECT":
-
-            message_to_huzzah = "TURN_ON_PROTECT"
-            huzzah_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            huzzah_socket.connect(huzzah_address)
-            huzzah_socket.send(message_to_huzzah.encode('utf-8'))
-            huzzah_socket.close()
-
-            # send ack to app
-            client_socket.send("protect_on_sent_to_huzzah".encode('utf-8'))
-
-        elif received_message == "USR_TURN_OFF_PROTECT":
-
-            message_to_huzzah = "TURN_OFF_PROTECT"
-            huzzah_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            huzzah_socket.connect(huzzah_address)
-            huzzah_socket.send(message_to_huzzah.encode('utf-8'))
-            huzzah_socket.close()
-
-            # send ack to app
-            client_socket.send("protect_off_sent_to_huzzah".encode('utf-8'))
-
-    # close tcp connection
-    client_socket.close()
-    print(f"Connection with {client_address} closed.")
-
-
-# initialize Socket connection
-server_address = ('0.0.0.0', 8080)  # 0.0.0.0 allow from any ip connection
-server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server_socket.bind(server_address)
-server_socket.listen(5)  # 5 connections max
-
-print("Waiting for a connection...")
-
-# multi-threading handles different connections at the same time
-while True:
-    client_socket, client_address = server_socket.accept()
-    client_handler = threading.Thread(target=handle_client, args=(client_socket, client_address))
-    client_handler.start()
-
+        check_and_reset_status()
+        time.sleep(300)  # 每隔5分钟清零状态
